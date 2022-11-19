@@ -1,1 +1,8 @@
 add_subdirectory(helloworld)
+add_subdirectory(asteroids)
+add_subdirectory(loadmodel)
+add_subdirectory(lookat)
+add_subdirectory(viewer1)
+add_subdirectory(viewer1DAN)
+add_subdirectory(viewer2)
+add_subdirectory(viewer3)
