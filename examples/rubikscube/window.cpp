@@ -48,23 +48,27 @@ void Window::onCreate() {
 
   m_trianglesToDraw = m_model.getNumTriangles();
 
-  // Setup cubess
-  for (auto &cube : m_cubes) {
-    randomizeCube(cube);
+  // Setup cubes
+  for (int x = 0; x < 3; x++) {
+    for (int y = 0; y < 3; y++) {
+      for (int z = 0; z < 3; z++) {
+        m_cubes.at(x*9+y*3+z*1).m_position = glm::vec3((x-1)*m_distance,(y-1)*m_distance,(z-1)*m_distance);
+      }
+    }
   }
 }
 
-void Window::randomizeCube(Cube &cube) {
-  // Random position: x, y, z
-  std::uniform_real_distribution<float> distPosXY(-1.0f, 1.0f);
-  std::uniform_real_distribution<float> distPosZ(-1.0f, 1.0f);
-  cube.m_position =
-      glm::vec3(distPosXY(m_randomEngine), distPosXY(m_randomEngine),
-                distPosZ(m_randomEngine));
+// void Window::randomizeCube(Cube &cube) {
+//   // Random position: x, y, z
+//   std::uniform_real_distribution<float> distPosXY(-1.0f, 1.0f);
+//   std::uniform_real_distribution<float> distPosZ(-1.0f, 1.0f);
+//   cube.m_position =
+//       glm::vec3(distPosXY(m_randomEngine), distPosXY(m_randomEngine),
+//                 distPosZ(m_randomEngine));
 
-  // Random rotation axis
-  cube.m_rotationAxis = glm::sphericalRand(1.0f);
-}
+//   // Random rotation axis
+//   cube.m_rotationAxis = glm::sphericalRand(1.0f);
+// }
 
 void Window::onUpdate() {
   m_modelMatrix = m_trackBall.getRotation();
@@ -72,6 +76,15 @@ void Window::onUpdate() {
   m_viewMatrix =
       glm::lookAt(glm::vec3(0.0f, 0.0f, 2.0f + m_zoom),
                   glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+
+  // Cubes Update
+  for (int x = 0; x < 3; x++) {
+    for (int y = 0; y < 3; y++) {
+      for (int z = 0; z < 3; z++) {
+        m_cubes.at(x*9+y*3+z*1).m_position = glm::vec3((x-1)*m_distance,(y-1)*m_distance,(z-1)*m_distance);
+      }
+    }
+  }
 }
 
 void Window::onPaint() {
@@ -97,7 +110,8 @@ void Window::onPaint() {
     // Compute model matrix of the current cube
     glm::mat4 modelMatrix = m_modelMatrix;
     modelMatrix = glm::translate(modelMatrix, cube.m_position);
-    // modelMatrix = glm::scale(modelMatrix, glm::vec3(0.2f));
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(0.125f));
+
     // modelMatrix = glm::rotate(modelMatrix, 0.0, cube.m_rotationAxis);
 
     // Set uniform variables for the current model
@@ -126,8 +140,10 @@ void Window::onPaintUI() {
     {
       // Slider will fill the space of the window
       ImGui::PushItemWidth(m_viewportSize.x - 25);
-      ImGui::SliderInt(" ", &m_trianglesToDraw, 0, m_model.getNumTriangles(),
+      ImGui::SliderInt("Triangles", &m_trianglesToDraw, 0, m_model.getNumTriangles(),
                        "%d triangles");
+      ImGui::SliderFloat("Distance", &m_distance, 0, 0.5,
+                       "%f distance");
       ImGui::PopItemWidth();
     }
 

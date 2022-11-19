@@ -26,9 +26,10 @@ private:
     glm::vec3 m_position{};
     glm::vec3 m_rotationAxis{};
   };
-  std::array<Cube, 2> m_cubes;
+  std::array<Cube, 27> m_cubes;
 
   int m_trianglesToDraw{};
+  float m_distance{0.14366};
 
   TrackBall m_trackBall;
   float m_zoom{};
