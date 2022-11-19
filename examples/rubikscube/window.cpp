@@ -1,5 +1,8 @@
 #include "window.hpp"
 
+#include <glm/gtc/random.hpp>
+#include <glm/gtx/fast_trigonometry.hpp>
+
 void Window::onEvent(SDL_Event const &event) {
   glm::ivec2 mousePosition;
   SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
@@ -36,7 +39,31 @@ void Window::onCreate() {
   m_model.loadObj(assetsPath + "cube.obj");
   m_model.setupVAO(m_program);
 
+  //  // Camera at (0,0,0) and looking towards the negative z
+  // glm::vec3 const eye{0.0f, 0.0f, 0.0f};
+  // glm::vec3 const at{0.0f, 0.0f, -1.0f};
+  // glm::vec3 const up{0.0f, 1.0f, 0.0f};
+  // m_viewMatrix = glm::lookAt(eye, at, up);
+
+
   m_trianglesToDraw = m_model.getNumTriangles();
+
+  // Setup cubess
+  for (auto &cube : m_cubes) {
+    randomizeCube(cube);
+  }
+}
+
+void Window::randomizeCube(Cube &cube) {
+  // Random position: x, y, z
+  std::uniform_real_distribution<float> distPosXY(-1.0f, 1.0f);
+  std::uniform_real_distribution<float> distPosZ(-1.0f, 1.0f);
+  cube.m_position =
+      glm::vec3(distPosXY(m_randomEngine), distPosXY(m_randomEngine),
+                distPosZ(m_randomEngine));
+
+  // Random rotation axis
+  cube.m_rotationAxis = glm::sphericalRand(1.0f);
 }
 
 void Window::onUpdate() {
@@ -64,14 +91,24 @@ void Window::onPaint() {
   abcg::glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, &m_viewMatrix[0][0]);
   abcg::glUniformMatrix4fv(projMatrixLoc, 1, GL_FALSE, &m_projMatrix[0][0]);
 
-  // Set uniform variables for the current model
-  abcg::glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, &m_modelMatrix[0][0]);
 
-  auto const modelViewMatrix{glm::mat3(m_viewMatrix * m_modelMatrix)};
-  auto const normalMatrix{glm::inverseTranspose(modelViewMatrix)};
-  abcg::glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, &normalMatrix[0][0]);
 
-  m_model.render(m_trianglesToDraw);
+  for (auto &cube : m_cubes) {
+    // Compute model matrix of the current cube
+    glm::mat4 modelMatrix = m_modelMatrix;
+    modelMatrix = glm::translate(modelMatrix, cube.m_position);
+    // modelMatrix = glm::scale(modelMatrix, glm::vec3(0.2f));
+    // modelMatrix = glm::rotate(modelMatrix, 0.0, cube.m_rotationAxis);
+
+    // Set uniform variables for the current model
+    abcg::glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, &modelMatrix[0][0]);
+
+    auto const modelViewMatrix{glm::mat3(m_viewMatrix * m_modelMatrix)};
+    auto const normalMatrix{glm::inverseTranspose(modelViewMatrix)};
+    abcg::glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, &normalMatrix[0][0]);
+
+    m_model.render(m_trianglesToDraw);
+  }
 
   abcg::glUseProgram(0);
 }

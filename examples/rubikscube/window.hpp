@@ -1,6 +1,8 @@
 #ifndef WINDOW_HPP_
 #define WINDOW_HPP_
 
+#include <random>
+
 #include "abcgOpenGL.hpp"
 #include "model.hpp"
 #include "trackball.hpp"
@@ -16,9 +18,16 @@ protected:
   void onDestroy() override;
 
 private:
+  std::default_random_engine m_randomEngine;
   glm::ivec2 m_viewportSize{};
-
   Model m_model;
+  
+  struct Cube {
+    glm::vec3 m_position{};
+    glm::vec3 m_rotationAxis{};
+  };
+  std::array<Cube, 2> m_cubes;
+
   int m_trianglesToDraw{};
 
   TrackBall m_trackBall;
@@ -29,6 +38,8 @@ private:
   glm::mat4 m_projMatrix{1.0f};
 
   GLuint m_program{};
+
+  void randomizeCube(Cube &cube);
 };
 
 #endif
