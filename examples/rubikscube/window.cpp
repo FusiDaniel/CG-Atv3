@@ -3,6 +3,7 @@
 #include <glm/gtc/random.hpp>
 #include <glm/gtc/constants.hpp>
 #include <glm/gtx/fast_trigonometry.hpp>
+#include <algorithm>
 
 void Window::onEvent(SDL_Event const &event) {
   glm::ivec2 mousePosition;
@@ -40,72 +41,93 @@ void Window::onCreate() {
   m_model.loadObj(assetsPath + "cube.obj");
   m_model.setupVAO(m_program);
 
-  //  // Camera at (0,0,0) and looking towards the negative z
-  // glm::vec3 const eye{0.0f, 0.0f, 0.0f};
-  // glm::vec3 const at{0.0f, 0.0f, -1.0f};
-  // glm::vec3 const up{0.0f, 1.0f, 0.0f};
-  // m_viewMatrix = glm::lookAt(eye, at, up);
-
-
   m_trianglesToDraw = m_model.getNumTriangles();
 
-  std::uniform_int_distribution<int> rot_axis(-1, 1);
+  std::uniform_int_distribution<int> rot_axis(0, 2);
   // Setup cubes
   for (int x = 0; x < 3; x++) {
     for (int y = 0; y < 3; y++) {
       for (int z = 0; z < 3; z++) {
         m_cubes.at(x*9+y*3+z*1).m_position = glm::vec3((x-1)*m_distance,(y-1)*m_distance,(z-1)*m_distance);
-        m_cubes.at(x*9+y*3+z*1).m_rotationAxis = glm::vec3(rot_axis(m_randomEngine)*glm::half_pi<float>(),rot_axis(m_randomEngine)*glm::half_pi<float>(),rot_axis(m_randomEngine)*glm::half_pi<float>());
+        
+        glm::vec3 actual_axis{0.0};
+        actual_axis[rot_axis(m_randomEngine)] = glm::half_pi<float>();
+        m_cubes.at(x*9+y*3+z*1).m_rotationAxis = actual_axis;
       }
     }
   }
 }
 
-// void Window::randomizeCube(Cube &cube) {
-//   // Random position: x, y, z
-//   std::uniform_real_distribution<float> distPosXY(-1.0f, 1.0f);
-//   std::uniform_real_distribution<float> distPosZ(-1.0f, 1.0f);
-//   cube.m_position =
-//       glm::vec3(distPosXY(m_randomEngine), distPosXY(m_randomEngine),
-//                 distPosZ(m_randomEngine));
-
-//   // Random rotation axis
-//   cube.m_rotationAxis = glm::sphericalRand(1.0f);
-// }
-
 void Window::onUpdate() {
-  std::uniform_int_distribution<int> rot_axis(-1, 1);
+  std::uniform_int_distribution<int> rot_axis(0, 2);
   auto const deltaTime{gsl::narrow_cast<float>(getDeltaTime())};
   // m_angle = glm::wrapAngle(m_angle + glm::radians(90.0f) * deltaTime);
 
   if (!rot_pause) {
     if (!rot_reverse) {
-      m_distance = glm::wrapAngle(m_distance + 0.10 * deltaTime);
+      m_distance = glm::wrapAngle(m_distance + 0.3 * deltaTime);
     }
     else {
-      m_distance = glm::wrapAngle(m_distance - 0.10 * deltaTime);
+      m_distance = glm::wrapAngle(m_distance - 0.3 * deltaTime);
     }
 
     if (m_distance > 0.4 && !rot_reverse) {
       // rot_reverse = !rot_reverse;
       rot_pause = !rot_pause;
-
+      m_angle += 0.025;
     }
     else if (m_distance < 0.14366 && rot_reverse) {
       rot_reverse = !rot_reverse;
+      
     }
   }
-  // else {
-  //   for (int x = 0; x < 3; x++) {
-  //     for (int y = 0; y < 3; y++) {
-  //       for (int z = 0; z < 3; z++) {
-  //         m_cubes.at(x*9+y*3+z*1).m_rotationAxis = glm::vec3(rot_axis(m_randomEngine)*glm::half_pi(),rot_axis(m_randomEngine)*glm::half_pi(),rot_axis(m_randomEngine)*glm::half_pi());
-  //       }
-  //     }
-  //   }
-  // }
-  
+  else {
+    m_angle = m_angle + glm::half_pi<float>() * deltaTime;
+    // 360 = 0 90 180 270 360
+    if (m_angle > glm::half_pi<float>()*4 && m_angle < glm::half_pi<float>()*4 + 0.025) {
+      m_angle = 0.0;
+      rot_pause = !rot_pause;
+      rot_reverse = !rot_reverse;
 
+      for (int x = 0; x < 3; x++) {
+        for (int y = 0; y < 3; y++) {
+          for (int z = 0; z < 3; z++) {
+
+            glm::vec3 aa{0.0};
+            aa[rot_axis(m_randomEngine)] = glm::half_pi<float>();
+            m_cubes.at(x*9+y*3+z*1).m_rotationAxis = aa;
+          }
+        }
+      }
+    } 
+    else if (m_angle > glm::half_pi<float>()*3 && m_angle < glm::half_pi<float>()*3 + 0.025) {
+      rot_x = 1.11;
+      m_angle = glm::half_pi<float>()*3;
+      rot_pause = !rot_pause;
+      rot_reverse = !rot_reverse;
+    }
+    else if (m_angle > glm::half_pi<float>()*2 && m_angle < glm::half_pi<float>()*2 + 0.025) {
+      m_angle = glm::half_pi<float>()*2;
+      rot_pause = !rot_pause;
+      rot_reverse = !rot_reverse;
+
+    }
+    else if (m_angle > glm::half_pi<float>() && m_angle < glm::half_pi<float>() + 0.025) {
+      m_angle = glm::half_pi<float>();
+      rot_pause = !rot_pause;
+      rot_reverse = !rot_reverse;
+
+    }
+
+    // rot_z = deltaTime;
+    // rot_y = std::fmod(m_angle, glm::half_pi<float>());
+
+    // 1.57079632679
+    // if (std::fmod(m_angle, glm::half_pi<float>()) >= 0.0 && std::fmod(m_angle, glm::half_pi<float>()) <= 0.00015 && m_angle >= 0.00015) {
+    // if (std::fmod(m_angle, glm::half_pi<float>()) == 0.0 && m_angle != 0) {
+    //   // m_angle = 0.0;
+    // }
+  }
   m_modelMatrix = m_trackBall.getRotation();
 
   m_viewMatrix =
@@ -118,7 +140,6 @@ void Window::onUpdate() {
       for (int z = 0; z < 3; z++) {
         m_cubes.at(x*9+y*3+z*1).m_position = glm::vec3((x-1)*m_distance,(y-1)*m_distance,(z-1)*m_distance);
         // m_cubes.at(x*9+y*3+z*1).m_rotationAxis = glm::vec3{rot_x, rot_y, rot_z};
-        
       }
     }
   }
@@ -149,10 +170,16 @@ void Window::onPaint() {
         modelMatrix = glm::translate(modelMatrix, cube.m_position);
         modelMatrix = glm::scale(modelMatrix, glm::vec3(0.125f));
 
-        if (rot_pause) {
-          // modelMatrix = glm:x==0 && y==0 && z==0:translate(modelMatrix, cube.m_position);
-          modelMatrix = glm::rotate(modelMatrix, rot_x, cube.m_rotationAxis); 
-        } 
+        modelMatrix = glm::rotate(modelMatrix, m_angle, cube.m_rotationAxis); 
+
+        // if (rot_pause) {
+        //   if (m_change) {
+        //     // m_angle = 0.0;
+            
+        //     m_change = true;
+        //     // rot_y = 2.5;
+        //   }
+        // } 
 
         // Set uniform variables for the current model
         abcg::glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, &modelMatrix[0][0]);
@@ -201,19 +228,18 @@ void Window::onPaintUI() {
     {
       // Slider will fill the space of the window
       ImGui::PushItemWidth(m_viewportSize.x - 25);
-      ImGui::SliderInt("Triangles", &m_trianglesToDraw, 0, m_model.getNumTriangles(),
-                       "%d triangles");
       ImGui::SliderFloat("Distance", &m_distance, 0, 0.5,
                        "%f distance");
       ImGui::PopItemWidth();
     }
 
+    ImGui::Text("%f m_angle, %d", m_angle, std::fmod(m_angle, glm::half_pi<float>()) == 0.0);
+    ImGui::Text("%f m_distance", m_distance);
+    ImGui::Text("%d rot_pause", rot_pause);
+    ImGui::Text("%d rot_reverse", rot_reverse);
+    
     ImGui::SliderFloat("rot x", &rot_x, 0, 5.0,
                        "%f rot x");
-    ImGui::SliderFloat("rot y", &rot_y, 0, 5.0,
-                       "%f rot y");
-    ImGui::SliderFloat("rot z", &rot_z, 0, 5.0,
-                       "%f rot z");
     ImGui::End();
   }
 

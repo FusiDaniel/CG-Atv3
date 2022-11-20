@@ -28,9 +28,10 @@ private:
   };
   std::array<Cube, 27> m_cubes;
 
-  float m_angle{};
+  float m_angle{0.0};
   bool rot_reverse{false};
   bool rot_pause{false};
+  bool m_change{false};
 
   int m_trianglesToDraw{};
   float m_distance{0.14366};
