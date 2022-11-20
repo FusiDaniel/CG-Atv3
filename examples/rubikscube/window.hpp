@@ -31,13 +31,10 @@ private:
   float m_angle{0.0};
   bool rot_reverse{false};
   bool rot_pause{false};
-  bool m_change{false};
+  bool m_animation{true};
 
   int m_trianglesToDraw{};
   float m_distance{0.14366};
-  float rot_x{0.0};
-  float rot_y{1.0};
-  float rot_z{0.0};
 
   TrackBall m_trackBall;
   float m_zoom{};
