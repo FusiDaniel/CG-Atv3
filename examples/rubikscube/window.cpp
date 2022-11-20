@@ -1,6 +1,7 @@
 #include "window.hpp"
 
 #include <glm/gtc/random.hpp>
+#include <glm/gtc/constants.hpp>
 #include <glm/gtx/fast_trigonometry.hpp>
 
 void Window::onEvent(SDL_Event const &event) {
@@ -48,11 +49,13 @@ void Window::onCreate() {
 
   m_trianglesToDraw = m_model.getNumTriangles();
 
+  std::uniform_int_distribution<int> rot_axis(-1, 1);
   // Setup cubes
   for (int x = 0; x < 3; x++) {
     for (int y = 0; y < 3; y++) {
       for (int z = 0; z < 3; z++) {
         m_cubes.at(x*9+y*3+z*1).m_position = glm::vec3((x-1)*m_distance,(y-1)*m_distance,(z-1)*m_distance);
+        m_cubes.at(x*9+y*3+z*1).m_rotationAxis = glm::vec3(rot_axis(m_randomEngine)*glm::half_pi<float>(),rot_axis(m_randomEngine)*glm::half_pi<float>(),rot_axis(m_randomEngine)*glm::half_pi<float>());
       }
     }
   }
@@ -71,6 +74,38 @@ void Window::onCreate() {
 // }
 
 void Window::onUpdate() {
+  std::uniform_int_distribution<int> rot_axis(-1, 1);
+  auto const deltaTime{gsl::narrow_cast<float>(getDeltaTime())};
+  // m_angle = glm::wrapAngle(m_angle + glm::radians(90.0f) * deltaTime);
+
+  if (!rot_pause) {
+    if (!rot_reverse) {
+      m_distance = glm::wrapAngle(m_distance + 0.10 * deltaTime);
+    }
+    else {
+      m_distance = glm::wrapAngle(m_distance - 0.10 * deltaTime);
+    }
+
+    if (m_distance > 0.4 && !rot_reverse) {
+      // rot_reverse = !rot_reverse;
+      rot_pause = !rot_pause;
+
+    }
+    else if (m_distance < 0.14366 && rot_reverse) {
+      rot_reverse = !rot_reverse;
+    }
+  }
+  // else {
+  //   for (int x = 0; x < 3; x++) {
+  //     for (int y = 0; y < 3; y++) {
+  //       for (int z = 0; z < 3; z++) {
+  //         m_cubes.at(x*9+y*3+z*1).m_rotationAxis = glm::vec3(rot_axis(m_randomEngine)*glm::half_pi(),rot_axis(m_randomEngine)*glm::half_pi(),rot_axis(m_randomEngine)*glm::half_pi());
+  //       }
+  //     }
+  //   }
+  // }
+  
+
   m_modelMatrix = m_trackBall.getRotation();
 
   m_viewMatrix =
@@ -82,6 +117,8 @@ void Window::onUpdate() {
     for (int y = 0; y < 3; y++) {
       for (int z = 0; z < 3; z++) {
         m_cubes.at(x*9+y*3+z*1).m_position = glm::vec3((x-1)*m_distance,(y-1)*m_distance,(z-1)*m_distance);
+        // m_cubes.at(x*9+y*3+z*1).m_rotationAxis = glm::vec3{rot_x, rot_y, rot_z};
+        
       }
     }
   }
@@ -104,25 +141,49 @@ void Window::onPaint() {
   abcg::glUniformMatrix4fv(viewMatrixLoc, 1, GL_FALSE, &m_viewMatrix[0][0]);
   abcg::glUniformMatrix4fv(projMatrixLoc, 1, GL_FALSE, &m_projMatrix[0][0]);
 
+  for (int x = 0; x < 3; x++) {
+    for (int y = 0; y < 3; y++) {
+      for (int z = 0; z < 3; z++) {
+        Cube &cube = m_cubes.at(x*9+y*3+z*1);
+        glm::mat4 modelMatrix = m_modelMatrix;
+        modelMatrix = glm::translate(modelMatrix, cube.m_position);
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(0.125f));
+
+        if (rot_pause) {
+          // modelMatrix = glm:x==0 && y==0 && z==0:translate(modelMatrix, cube.m_position);
+          modelMatrix = glm::rotate(modelMatrix, rot_x, cube.m_rotationAxis); 
+        } 
+
+        // Set uniform variables for the current model
+        abcg::glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, &modelMatrix[0][0]);
+        
+        auto const modelViewMatrix{glm::mat3(m_viewMatrix * modelMatrix)};
+        auto const normalMatrix{glm::inverseTranspose(modelViewMatrix)};
+        abcg::glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, &normalMatrix[0][0]);
+
+        m_model.render(m_trianglesToDraw);
+      }
+     }
+    }
 
 
-  for (auto &cube : m_cubes) {
-    // Compute model matrix of the current cube
-    glm::mat4 modelMatrix = m_modelMatrix;
-    modelMatrix = glm::translate(modelMatrix, cube.m_position);
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(0.125f));
+  // for (auto &cube : m_cubes) {
+  //   // Compute model matrix of the current cube
+  //   glm::mat4 modelMatrix = m_modelMatrix;
+  //   modelMatrix = glm::translate(modelMatrix, cube.m_position);
+  //   modelMatrix = glm::scale(modelMatrix, glm::vec3(0.125f));
 
-    // modelMatrix = glm::rotate(modelMatrix, 0.0, cube.m_rotationAxis);
+  //   modelMatrix = glm::rotate(modelMatrix, m_angle, cube.m_rotationAxis);
 
-    // Set uniform variables for the current model
-    abcg::glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, &modelMatrix[0][0]);
+  //   // Set uniform variables for the current model
+  //   abcg::glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, &modelMatrix[0][0]);
+    
+  //   auto const modelViewMatrix{glm::mat3(m_viewMatrix * modelMatrix)};
+  //   auto const normalMatrix{glm::inverseTranspose(modelViewMatrix)};
+  //   abcg::glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, &normalMatrix[0][0]);
 
-    auto const modelViewMatrix{glm::mat3(m_viewMatrix * m_modelMatrix)};
-    auto const normalMatrix{glm::inverseTranspose(modelViewMatrix)};
-    abcg::glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, &normalMatrix[0][0]);
-
-    m_model.render(m_trianglesToDraw);
-  }
+  //   m_model.render(m_trianglesToDraw);
+  // }
 
   abcg::glUseProgram(0);
 }
@@ -132,7 +193,7 @@ void Window::onPaintUI() {
 
   // Create window for slider
   {
-    ImGui::SetNextWindowPos(ImVec2(5, m_viewportSize.y - 94));
+    ImGui::SetNextWindowPos(ImVec2(5, m_viewportSize.y - 135));
     ImGui::SetNextWindowSize(ImVec2(m_viewportSize.x - 10, -1));
     ImGui::Begin("Slider window", nullptr, ImGuiWindowFlags_NoDecoration);
 
@@ -147,6 +208,12 @@ void Window::onPaintUI() {
       ImGui::PopItemWidth();
     }
 
+    ImGui::SliderFloat("rot x", &rot_x, 0, 5.0,
+                       "%f rot x");
+    ImGui::SliderFloat("rot y", &rot_y, 0, 5.0,
+                       "%f rot y");
+    ImGui::SliderFloat("rot z", &rot_z, 0, 5.0,
+                       "%f rot z");
     ImGui::End();
   }
 

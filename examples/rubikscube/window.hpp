@@ -28,8 +28,15 @@ private:
   };
   std::array<Cube, 27> m_cubes;
 
+  float m_angle{};
+  bool rot_reverse{false};
+  bool rot_pause{false};
+
   int m_trianglesToDraw{};
   float m_distance{0.14366};
+  float rot_x{0.0};
+  float rot_y{1.0};
+  float rot_z{0.0};
 
   TrackBall m_trackBall;
   float m_zoom{};
