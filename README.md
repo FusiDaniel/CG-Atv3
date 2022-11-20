@@ -1,115 +1,254 @@
-# ABCg
+### README
 
-![linux workflow](https://github.com/hbatagelo/abcg/actions/workflows/linux.yml/badge.svg)
-![macOS workflow](https://github.com/hbatagelo/abcg/actions/workflows/macos.yml/badge.svg)
-![Windows workflow](https://github.com/hbatagelo/abcg/actions/workflows/windows.yml/badge.svg)
-![WASM workflow](https://github.com/hbatagelo/abcg/actions/workflows/wasm.yml/badge.svg)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/hbatagelo/abcg)](https://github.com/hbatagelo/abcg/releases/latest)
+Diego Sousa Santos - RA: 11201921874
+Guilherme Cesario Scagnolato - RA: 11201812319
+
+### ABCg
+![https://github.com/hbatagelo/abcg/actions/workflows/linux.yml/badge.svg](https://github.com/hbatagelo/abcg/actions/workflows/linux.yml/badge.svg)
+![https://github.com/hbatagelo/abcg/actions/workflows/macos.yml/badge.svg](https://github.com/hbatagelo/abcg/actions/workflows/macos.yml/badge.svg)
+![https://github.com/hbatagelo/abcg/actions/workflows/windows.yml/badge.svg](https://github.com/hbatagelo/abcg/actions/workflows/windows.yml/badge.svg)
+![https://github.com/hbatagelo/abcg/actions/workflows/wasm.yml/badge.svg](https://github.com/hbatagelo/abcg/actions/workflows/wasm.yml/badge.svg)
+[https://img.shields.io/github/v/release/hbatagelo/abcg](https://img.shields.io/github/v/release/hbatagelo/abcg)
 
 Development framework accompanying the course [MCTA008-17 Computer Graphics](http://professor.ufabc.edu.br/~harlen.batagelo/cg/) at [UFABC](https://www.ufabc.edu.br/).
 
-[Documentation](https://hbatagelo.github.io/abcg/abcg/doc/html/) \| [Release notes](CHANGELOG.md) 
+[Documentation](https://hbatagelo.github.io/abcg/abcg/doc/html/) | [Release notes](CHANGELOG.md)
 
-ABCg is a lightweight C++ framework that simplifies the development of 3D graphics applications based on [OpenGL](https://www.opengl.org), [OpenGL ES](https://www.khronos.org), [WebGL](https://www.khronos.org/webgl/), and [Vulkan](https://www.vulkan.org). It is designed for the tutorials and assignments of the course "MCTA008-17 Computer Graphics" taught at Federal University of ABC (UFABC).
+ABCg is a lightweight C++ framework that simplifies the development of 3D graphics applications based on [OpenGL](https://www.opengl.org/), [OpenGL ES](https://www.khronos.org/), [WebGL](https://www.khronos.org/webgl/), and [Vulkan](https://www.vulkan.org/). It is designed for the tutorials and assignments of the course “MCTA008-17 Computer Graphics” taught at Federal University of ABC (UFABC).
 
-* * *
+---
 
-## Main features
+# Atividade 03 - ExplodingRubikCube
 
--   Supported platforms: Linux, mac OS, Windows, WebAssembly.
--   Supported backends: OpenGL 3.3+, OpenGL ES 3.0+, WebGL 2.0 (via Emscripten), Vulkan 1.3.
--   Applications that use the common subset of functions between OpenGL 3.3 and OpenGL ES 3.0 can be built for WebGL 2.0 using the same source code. 
--   OpenGL functions can be qualified with the `abcg::` namespace to enable throwing exceptions with descriptive GL error messages that include the source code location.
--   Includes helper classes and functions for loading textures (using [SDL_image](https://www.libsdl.org/projects/SDL_image/)), loading OBJ 3D models (using [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader)), and compiling GLSL shaders to SPIR-V with [glslang](https://github.com/KhronosGroup/glslang).
+![Untitled](README%204992741d5a10417faf175012cad0c4f3/Untitled.png)
 
-* * *
+GitHub Pages: [ExplodingRubikCube](https://fusidaniel.github.io/CG-Atv3/public/helloworld.html)
 
-## Requirements
+## Descrição geral
 
-The following minimum requirements are shared among all platforms:
+- Foi desenvolvido um projeto com o objetivo de produzir uma aplicação 3D, e aplicar transformações geométricas a com o uso da lib ABCg.
+- Portanto desenvolvemos um cubo mágico, que explode separando as peças e, e então "embaralha" cada um dos cubos e monta o cubo mágico novamente.
 
--   [CMake](https://cmake.org/) 3.21.
--   A C++ compiler with at least partial support for C++20 (tested with GCC 11, Clang 13, MSVC 17, and emcc 3.1).
--   A system with support for OpenGL 3.3 (OpenGL backend) or Vulkan 1.3 (Vulkan backend). Conformant software rasterizers such as Mesa's [Gallium llvmpipe](https://docs.mesa3d.org/drivers/llvmpipe.html) and lavapipe (post Jun 2022) are supported. Mesa's [D3D12](https://devblogs.microsoft.com/directx/directx-heart-linux/) backend on [WSL 2.0](https://docs.microsoft.com/en-us/windows/wsl/install) is supported as well.
+## Implementação
 
-For WebAssembly:
+### `normal.vert / normal.frag`
 
--   [Emscripten](https://emscripten.org/).
--   A browser with support for WebGL 2.0.
+- O fragmento de código abaixo foi usado para gerar a coloração das faces do cubo.
 
-For building desktop applications:
+```cpp
+void main() {
+  mat4 MVP = projMatrix * viewMatrix * modelMatrix;
+  gl_Position = MVP * vec4(inPosition, 1.0);
+  vec3 N = inNormal;  // Object space
 
--   [SDL](https://www.libsdl.org/) 2.0.
--   [SDL_image](https://www.libsdl.org/projects/SDL_image/) 2.0.
--   [GLEW](http://glew.sourceforge.net/) 2.2.0 (required for OpenGL-based applications).
--   [Vulkan](https://www.lunarg.com/vulkan-sdk/) 1.3 (required for Vulkan-based applications).
+  vec3 rubikColor = vec3(0.5, 0.5, 0.5);
+  if (N.y > 0.0 && N.x == 0.0 && N.z == 0.0) {
+    // white top
+    rubikColor = vec3(1.0, 1.0, 1.0);
+  }  else if (N.y < 0.0 && N.x == 0.0 && N.z == 0.0) {
+    // yellow bottom
+    rubikColor = vec3(1.0, 1.0, 0.0);
+  }  else if (N.x > 0.0 && N.y == 0.0 && N.z == 0.0) { 
+    // green side
+    rubikColor = vec3(0.0, 0.5, 0.0);
+  }  else if (N.x < 0.0 && N.y == 0.0 && N.z == 0.0) {
+    // blue side
+    rubikColor = vec3(0.0, 0.0, 1.0);
+  }  else if (N.z > 0.0 && N.x == 0.0 && N.y == 0.0) {
+    // orange side
+    rubikColor = vec3(1.0, 0.666, 0.0);
+  }  else if (N.z < 0.0 && N.x == 0.0 && N.y == 0.0) {
+    // red side
+    rubikColor = vec3(1.0, 0.0, 0.0);
+  }
+  fragColor = vec4(rubikColor, 1.0);
+}
+```
 
-Desktop dependencies can be resolved automatically with [Conan](https://conan.io/). It is disabled by default. To use it, install Conan 1.47 or later and then configure CMake with `-DENABLE_CONAN=ON`.
+```cpp
+#version 300 es
 
-The default renderer backend is OpenGL (CMake option `GRAPHICS_API=OpenGL`). To use the Vulkan backend, configure CMake with `-DGRAPHICS_API=Vulkan`.
+precision mediump float;
 
-* * *
+in vec4 fragColor;
+out vec4 outColor;
 
-## Installation and usage
+void main() { outColor = fragColor; }
+```
 
-Start by cloning the repository:
+### `window.hpp`
 
-    # Get abcg repo
-    git clone https://github.com/hbatagelo/abcg.git
+- Para a definição da classe Window, foram sobrescritos seis métodos da classe OpenGLWindow.
 
-    # Enter the directory
-    cd abcg
+```cpp
+  void onEvent(SDL_Event const &event) override; // Gerencia enventos na tela
+  void onCreate() override;  // Cria a aplicação
+  void onUpdate() override;  // Atualiza a tela a
+  void onPaint() override;   // Renderiza as imagens
+  void onPaintUI() override; // UI
+  void onResize(glm::ivec2 const &size) override; // Redimensionamento de tela
+  void onDestroy() override; // Destruição da tela
+```
 
-Follow the instructions below to build the "Hello, World!" sample located in `abcg/examples/helloworld`.
+- Além disso, foram definidas as seguintes variáveis e métodos auxiliares.
 
-### Windows
+```cpp
+private:
+  std::default_random_engine m_randomEngine;
+  glm::ivec2 m_viewportSize{};
+  Model m_model;
+  
+  struct Cube {
+    glm::vec3 m_position{};
+    glm::vec3 m_rotationAxis{};
+  };
+  std::array<Cube, 27> m_cubes;
 
--   Run `build-vs.bat` for building with the Visual Studio 2022 toolchain.
--   Run `build.bat` for building with GCC (MinGW-w64).
+  float m_angle{0.0};
+  bool rot_reverse{false};
+  bool rot_pause{false};
+  bool m_animation{true};
 
-`build-vs.bat` and `build.bat` accept two optional arguments: (1) the build type, which is `Release` by default, and (2) an extra CMake option. For example, for a `Debug` build with `-DENABLE_CONAN=ON` using VS 2022, run 
+  int m_trianglesToDraw{};
+  float m_distance{0.14366};
 
-    build-vs.bat Debug -DENABLE_CONAN=ON
+  TrackBall m_trackBall;
+  float m_zoom{};
 
-### Linux and macOS
+  glm::mat4 m_modelMatrix{1.0f};
+  glm::mat4 m_viewMatrix{1.0f};
+  glm::mat4 m_projMatrix{1.0f};
 
-Run `./build.sh`.
+  GLuint m_program{};
 
-The script accepts two optional arguments: (1) the build type, which is `Release` by default, and (2) an extra CMake option. For example, for a `Debug` build with `-DENABLE_CONAN=ON`, run 
+  void randomizeCube(Cube &cube);
+};
+```
 
-    ./build.sh Debug -DENABLE_CONAN=ON
+### `**window.cpp**`
 
-### WebAssembly
+- Neste arquivo foram implementados todos os métodos sobrescritos no arquivo window.hpp.
+- `onEvent()`
+    - Função utilizada para movimentar a camera em torno do cubo magico.
+    
+    ```cpp
+    void Window::onEvent(SDL_Event const &event) {
+      glm::ivec2 mousePosition;
+      SDL_GetMouseState(&mousePosition.x, &mousePosition.y);
+    
+      if (event.type == SDL_MOUSEMOTION) {
+        m_trackBall.mouseMove(mousePosition);
+      }
+      if (event.type == SDL_MOUSEBUTTONDOWN &&
+          event.button.button == SDL_BUTTON_LEFT) {
+        m_trackBall.mousePress(mousePosition);
+      }
+      if (event.type == SDL_MOUSEBUTTONUP &&
+          event.button.button == SDL_BUTTON_LEFT) {
+        m_trackBall.mouseRelease(mousePosition);
+      }
+      if (event.type == SDL_MOUSEWHEEL) {
+        m_zoom += (event.wheel.y > 0 ? -1.0f : 1.0f) / 5.0f;
+        m_zoom = glm::clamp(m_zoom, -1.5f, 1.0f);
+      }
+    }
+    ```
+    
+- `onCreate()`
+    - No método **OnCreate** são realizadas as operações, como inicialização de variáveis, carregamento dos cubos, rotação dos cubos.
+        
+        ```cpp
+        void Window::onCreate() {
+          auto const assetsPath{abcg::Application::getAssetsPath()};
+        
+          abcg::glClearColor(0, 0, 0, 1);
+          abcg::glEnable(GL_DEPTH_TEST);
+          abcg::glEnable(GL_CULL_FACE);
+        
+          m_program =
+              abcg::createOpenGLProgram({{.source = assetsPath + "normal.vert",
+                                          .stage = abcg::ShaderStage::Vertex},
+                                         {.source = assetsPath + "normal.frag",
+                                          .stage = abcg::ShaderStage::Fragment}});
+        
+          m_model.loadObj(assetsPath + "cube.obj");
+          m_model.setupVAO(m_program);
+        
+          m_trianglesToDraw = m_model.getNumTriangles();
+        
+          std::uniform_int_distribution<int> rot_axis(0, 2);
+          
+          // Setup cubes
+          for (int x = 0; x < 3; x++) {
+            for (int y = 0; y < 3; y++) {
+              for (int z = 0; z < 3; z++) {
+                m_cubes.at(x*9+y*3+z*1).m_position = glm::vec3((x-1)*m_distance,(y-1)*m_distance,(z-1)*m_distance);
+                
+                glm::vec3 current_axis{0.0};
+                current_axis[rot_axis(m_randomEngine)] = glm::half_pi<float>();
+                m_cubes.at(x*9+y*3+z*1).m_rotationAxis = current_axis;
+              }
+            }
+          }
+        }
+        ```
+        
+- `onUpdate()`
+    - No método onUpdate o cubo é “explodido”, e então, após a explosão os cubos que formam o cubo magico rotacionam de forma aleatória, após a rotação eles são agrupados novamente (fragmento de codigo abaixo)
+        
+        ```cpp
+        // Cubes animation
+          if (!rot_pause) {
+            // In and Out translation
+            if (!rot_reverse) {
+              m_distance = glm::wrapAngle(m_distance + 0.3 * deltaTime);
+            }
+            else {
+              m_distance = glm::wrapAngle(m_distance - 0.3 * deltaTime);
+            }
+        
+            if (m_distance > 0.4 && !rot_reverse) {
+              rot_pause = !rot_pause;
+              m_angle += 0.1;
+            }
+            else if (m_distance < 0.14366 && rot_reverse) {
+              rot_reverse = !rot_reverse;
+            }
+        ...
+        } else {
+            // Per cube rotation
+            m_angle = m_angle + glm::half_pi<float>() * deltaTime;
+            if (m_angle > glm::half_pi<float>()*4 && m_angle < glm::half_pi<float>()*4 + 0.1) {
+              m_angle = 0.0;
+              rot_pause = !rot_pause;
+              rot_reverse = !rot_reverse;
+              for (int x = 0; x < 3; x++) {
+                for (int y = 0; y < 3; y++) {
+                  for (int z = 0; z < 3; z++) {
+                    glm::vec3 current_axis{0.0};
+                    current_axis[rot_axis(m_randomEngine)] = glm::half_pi<float>();
+                    m_cubes.at(x*9+y*3+z*1).m_rotationAxis = current_axis;
+                  }
+                }
+              }
+            }
+        ...
+        ```
+        
+- `onPaint()`
+    - No método **onPaint** são desenhados os objetos da aplicação.
+- `onPaintUI()`
+    - No método **onPaintUI** são desenhados os elementos de UI da tela.
+- `onResize()`
+    - No método **onResize** é onde a tela sofre resize.
+- `onDestroy()`
+    - No método **onDestroy** é onde a a tela é finalizada
 
-1.  Run `build-wasm.bat` (Windows) or `./build-wasm.sh` (Linux/macOS).
-2.  Run `runweb.bat` (Windows) or `./runweb.sh` (Linux/macOS) for setting up a local web server.
-3.  Open <http://localhost:8080/helloworld.html>.
+## Demonstração
 
-* * *
+![Animação.gif](README%204992741d5a10417faf175012cad0c4f3/Animao.gif)
 
-## Docker setup
-
-ABCg can be built in a [Docker](https://www.docker.com/) container. The Dockerfile provided is based on Ubuntu 22.04 and includes Emscripten.
-
-1.  Create the Docker image (`abcg`):
-
-        sudo docker build -t abcg .
-
-2.  Create the container (`abcg_container`):
-
-        sudo docker create -it \
-          -p 8080:8080 \
-          -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
-          -e DISPLAY \
-          --name abcg_container abcg
-
-3.  Start the container:
-
-        sudo docker start -ai abcg_container
-
-    On NVIDIA GPUs, install the [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker) to allow the container to use the host's NVIDIA driver and X server. Expose the X server with `sudo xhost +local:root` before starting the container.
-
-* * *
+---
 
 ## License
 
