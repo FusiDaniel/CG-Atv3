@@ -244,7 +244,7 @@ private:
 - `onDestroy()`
     - No método **onDestroy** é onde a a tela é finalizada
 
-## Demonstração
+## Demonstração (clique no GIF)
 
 ![Animação.gif](README%204992741d5a10417faf175012cad0c4f3/Animao.gif)
 
