@@ -86,7 +86,7 @@ void Window::onUpdate() {
 
     if (m_distance > 0.4 && !rot_reverse) {
       rot_pause = !rot_pause;
-      m_angle += 0.025;
+      m_angle += 0.1;
     }
     else if (m_distance < 0.14366 && rot_reverse) {
       rot_reverse = !rot_reverse;
@@ -105,7 +105,7 @@ void Window::onUpdate() {
   else {
     // Per cube rotation
     m_angle = m_angle + glm::half_pi<float>() * deltaTime;
-    if (m_angle > glm::half_pi<float>()*4 && m_angle < glm::half_pi<float>()*4 + 0.025) {
+    if (m_angle > glm::half_pi<float>()*4 && m_angle < glm::half_pi<float>()*4 + 0.1) {
       m_angle = 0.0;
       rot_pause = !rot_pause;
       rot_reverse = !rot_reverse;
@@ -121,18 +121,18 @@ void Window::onUpdate() {
         }
       }
     } 
-    else if (m_angle > glm::half_pi<float>()*3 && m_angle < glm::half_pi<float>()*3 + 0.025) {
+    else if (m_angle > glm::half_pi<float>()*3 && m_angle < glm::half_pi<float>()*3 + 0.1) {
       m_angle = glm::half_pi<float>()*3;
       rot_pause = !rot_pause;
       rot_reverse = !rot_reverse;
     }
-    else if (m_angle > glm::half_pi<float>()*2 && m_angle < glm::half_pi<float>()*2 + 0.025) {
+    else if (m_angle > glm::half_pi<float>()*2 && m_angle < glm::half_pi<float>()*2 + 0.1) {
       m_angle = glm::half_pi<float>()*2;
       rot_pause = !rot_pause;
       rot_reverse = !rot_reverse;
 
     }
-    else if (m_angle > glm::half_pi<float>() && m_angle < glm::half_pi<float>() + 0.025) {
+    else if (m_angle > glm::half_pi<float>() && m_angle < glm::half_pi<float>() + 0.1) {
       m_angle = glm::half_pi<float>();
       rot_pause = !rot_pause;
       rot_reverse = !rot_reverse;
