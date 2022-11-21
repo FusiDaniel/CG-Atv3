@@ -1,6 +1,6 @@
 ### README
 
-Diego Sousa Santos - RA: 11201921874
+Daniel Fusimoto Pires - RA: 11201921874
 Guilherme Cesario Scagnolato - RA: 11201812319
 
 ### ABCg
