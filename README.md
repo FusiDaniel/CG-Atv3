@@ -128,7 +128,7 @@ private:
 };
 ```
 
-### `**window.cpp**`
+### `window.cpp`
 
 - Neste arquivo foram implementados todos os métodos sobrescritos no arquivo window.hpp.
 - `onEvent()`
