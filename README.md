@@ -8,7 +8,7 @@ Guilherme Cesario Scagnolato - RA: 11201812319
 ![https://github.com/hbatagelo/abcg/actions/workflows/macos.yml/badge.svg](https://github.com/hbatagelo/abcg/actions/workflows/macos.yml/badge.svg)
 ![https://github.com/hbatagelo/abcg/actions/workflows/windows.yml/badge.svg](https://github.com/hbatagelo/abcg/actions/workflows/windows.yml/badge.svg)
 ![https://github.com/hbatagelo/abcg/actions/workflows/wasm.yml/badge.svg](https://github.com/hbatagelo/abcg/actions/workflows/wasm.yml/badge.svg)
-[https://img.shields.io/github/v/release/hbatagelo/abcg](https://img.shields.io/github/v/release/hbatagelo/abcg)
+![https://img.shields.io/github/v/release/hbatagelo/abcg](https://img.shields.io/github/v/release/hbatagelo/abcg)
 
 Development framework accompanying the course [MCTA008-17 Computer Graphics](http://professor.ufabc.edu.br/~harlen.batagelo/cg/) at [UFABC](https://www.ufabc.edu.br/).
 
@@ -31,9 +31,9 @@ GitHub Pages: [ExplodingRubikCube](https://fusidaniel.github.io/CG-Atv3/public/h
 
 ## Implementação
 
-### `normal.vert / normal.frag`
+### `normal.vert`
 
-- O fragmento de código abaixo foi usado para gerar a coloração das faces do cubo.
+- O fragmento de código abaixo foi usado para gerar a coloração das faces do cubo. Aqui foi usado o conceito de vetor normal das faces, onde se o vetor é composto por apenas uma direção x, y, ou z, ele é renderizado com uma cor específica (variando entre negativo e positivo), e se ele é combinação dos vetores x, y, e ou z, ele é pintado de cinza.
 
 ```cpp
 void main() {
@@ -64,7 +64,8 @@ void main() {
   fragColor = vec4(rubikColor, 1.0);
 }
 ```
-
+### `normal.frag`
+- O normal.frag é o arquivo responsável pela renderização de pixels pela GPU, neste caso, ele apenas pega as cores dos pixels de entrada e devolve para a saída.
 ```cpp
 #version 300 es
 
@@ -75,6 +76,8 @@ out vec4 outColor;
 
 void main() { outColor = fragColor; }
 ```
+### `main.cpp, trackball.hpp e trackball.cpp`
+- Estes três arquivos são os mesmos da atividade viewer 2. Eles são responsáveis pela inicialização do programa/janela da aplicação, e pela função de trackball implementada em aula, que recebe as entradas do mouse e aplica uma matriz de rotação sobre o modelo, de forma a simular um trackball sobre o modelo.
 
 ### `window.hpp`
 
@@ -129,7 +132,7 @@ private:
 
 - Neste arquivo foram implementados todos os métodos sobrescritos no arquivo window.hpp.
 - `onEvent()`
-    - Função utilizada para movimentar a camera em torno do cubo magico.
+    - Função utilizada para movimentar a câmera em torno do cubo mágico.
     
     ```cpp
     void Window::onEvent(SDL_Event const &event) {
@@ -155,7 +158,7 @@ private:
     ```
     
 - `onCreate()`
-    - No método **OnCreate** são realizadas as operações, como inicialização de variáveis, carregamento dos cubos, rotação dos cubos.
+    - No método **OnCreate** são realizadas as operações, como inicialização de variáveis, carregamento dos cubos, e eixo de rotação inicial dos cubos.
         
         ```cpp
         void Window::onCreate() {
@@ -194,7 +197,7 @@ private:
         ```
         
 - `onUpdate()`
-    - No método onUpdate o cubo é “explodido”, e então, após a explosão os cubos que formam o cubo magico rotacionam de forma aleatória, após a rotação eles são agrupados novamente (fragmento de codigo abaixo)
+    - No método onUpdate o cubo é “explodido” (aumentando a distância entre cada cubo), e então, após a explosão os cubos que formam o cubo mágico rotacionam 90° (aumento da variável m_angle) de forma aleatória (cada cubo tem um eixo de rotação aleatório), após a rotação eles são agrupados novamente (fragmento de código abaixo).
         
         ```cpp
         // Cubes animation
@@ -237,12 +240,32 @@ private:
         
 - `onPaint()`
     - No método **onPaint** são desenhados os objetos da aplicação.
+    - Em especial aqui, são aplicadas dois tipos de transformação sobre os cubos, começando com translação, escalonamento e rotação do cubo como um objeto só, e depois algumas transformações para adequar o cubo à visão de perspectiva ou ortográfica.
+    ``` cpp
+      for (auto &cube : m_cubes) {
+      // Compute model matrix of the current cube
+      glm::mat4 modelMatrix = m_modelMatrix;
+      modelMatrix = glm::translate(modelMatrix, cube.m_position);
+      modelMatrix = glm::scale(modelMatrix, glm::vec3(0.125f));
+      modelMatrix = glm::rotate(modelMatrix, m_angle, cube.m_rotationAxis);
+
+      // Set uniform variables for the current model
+      abcg::glUniformMatrix4fv(modelMatrixLoc, 1, GL_FALSE, &modelMatrix[0][0]);
+      
+      auto const modelViewMatrix{glm::mat3(m_viewMatrix * modelMatrix)};
+      auto const normalMatrix{glm::inverseTranspose(modelViewMatrix)};
+      abcg::glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, &normalMatrix[0][0]);
+
+      m_model.render(m_trianglesToDraw);
+  }
+    ```
 - `onPaintUI()`
     - No método **onPaintUI** são desenhados os elementos de UI da tela.
+    - Aqui boa parte dos elementos foram reaproveitados do projeto Viewer 2, como a seleção de visão por perspectiva ou ortográfica e direção de criação das faces, mas foi adicionado também um botão para pausar/retomar a animação, e um texto mostrando a atualização das distâncias entre cubos em tempo real.
 - `onResize()`
-    - No método **onResize** é onde a tela sofre resize.
+    - No método **onResize** é a função para adaptar a tela quando sofre um redicionamento.
 - `onDestroy()`
-    - No método **onDestroy** é onde a a tela é finalizada
+    - No método **onDestroy** é onde a função que serve para apagar todos os elementos quando a janela da aplicação for fechada.
 
 ## Demonstração (clique no GIF)
 
